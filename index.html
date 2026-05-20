@@ -745,7 +745,8 @@
     closeModal();
     await loadSheds();
     renderHeader();
-    toast('Shed details saved successfully!');
+    const passMsg = newPass ? ' Your new password is now active.' : '';
+    toast('Shed details saved successfully!' + passMsg);
   };
 
   // ── Admin Panel ────────────────────────────────────
@@ -777,7 +778,7 @@
             <div class="form-grid form-row-2">
               <div class="field">
                 <label>Shed Name <span style="color:var(--danger)">*</span></label>
-                <input type="text" id="new-shed-name" placeholder="e.g. Gosford Men's Shed" />
+                <input type="text" id="new-shed-name" placeholder="e.g. Gosford Mens Shed" />
               </div>
               <div class="field">
                 <label>Address</label>
