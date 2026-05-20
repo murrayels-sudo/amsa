@@ -400,8 +400,12 @@
   function renderHeader() {
     const el = document.getElementById('header-right');
     if (loggedIn) {
+      const pill = loggedIn.isAdmin
+        ? '&#9733; Admin — All Sheds'
+        : 'Editing: <strong>' + esc(loggedIn.name) + '</strong>';
       el.innerHTML = `
-        <span class="user-pill">Editing: <strong>${esc(loggedIn.name)}</strong></span>
+        <span class="user-pill">${pill}</span>
+        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>' : ''}
         <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
     } else {
       el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>`;
@@ -421,12 +425,13 @@
     el.innerHTML = sheds.map(sh => {
       const days = sh.days || {};
       const openDays = DAYS.filter(d => days[d] && days[d].open).map(d => d.slice(0,3));
-      const isMine = loggedIn && loggedIn.id === sh.id;
+      const isMine = loggedIn && (loggedIn.isAdmin || loggedIn.id === sh.id);
+      const mineLabel = loggedIn && loggedIn.isAdmin ? '&#9733; Admin' : '&#9733; Your shed';
       return `<div class="shed-card${isMine?' is-mine':''}" onclick="openView('${sh.id}')">
         <div class="card-name">${esc(sh.name)}</div>
         <div class="card-addr">${esc(sh.address||'')}</div>
         <div class="card-tags">
-          ${isMine ? `<span class="tag tag-mine">&#9733; Your shed</span>` : ''}
+          ${isMine ? `<span class="tag tag-mine">${mineLabel}</span>` : ''}
           ${openDays.map(d=>`<span class="tag tag-day">${d}</span>`).join('')}
         </div>
       </div>`;
@@ -450,7 +455,7 @@
   window.openView = function(id) {
     const sh = allSheds.find(s => s.id === id);
     if (!sh) return;
-    const isMine = loggedIn && loggedIn.id === sh.id;
+    const isMine = loggedIn && (loggedIn.isAdmin || loggedIn.id === sh.id);
     const days = sh.days || {};
     const openDays = DAYS.filter(d => days[d] && days[d].open);
 
@@ -491,7 +496,7 @@
         </div>
         <div class="modal-footer">
           ${isMine
-            ? `<button class="btn btn-primary" onclick="closeModal();openEdit('${sh.id}')">&#9998; Edit My Shed Details</button>`
+            ? `<button class="btn btn-primary" onclick="closeModal();openEdit('${sh.id}')">&#9998; ${loggedIn && loggedIn.isAdmin ? 'Edit This Shed (Admin)' : 'Edit My Shed Details'}</button>`
             : (!loggedIn ? `<button class="btn btn-outline" onclick="closeModal();openLogin()">Sign in to edit your shed</button>` : '')
           }
           <button class="btn btn-outline" onclick="closeModal()">Close</button>
@@ -508,7 +513,7 @@
           <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
         </div>
         <div class="modal-body">
-          <p class="login-note">Enter your shed's password to edit your own details. You can browse all sheds without signing in.</p>
+          <p class="login-note">Enter your shed's password to edit your own details, or the admin password to edit any shed. You can browse all sheds without signing in.</p>
           <div id="login-error"></div>
           <div class="field" style="margin-bottom:14px">
             <label>Shed Password</label>
@@ -530,6 +535,18 @@
     const btn = document.getElementById('login-btn');
     btn.disabled = true; btn.textContent = 'Checking…';
 
+    // Check admin password first
+    if (pass === CONFIG.ADMIN_PASSWORD) {
+      loggedIn = { id: 'admin', name: 'Administrator', isAdmin: true };
+      sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+      closeModal();
+      renderHeader();
+      renderGrid(filteredSheds());
+      toast('Welcome, Admin! You can edit all sheds.');
+      return;
+    }
+
+    // Otherwise check individual shed passwords
     const { data, error } = await supabase
       .from('sheds')
       .select('id, name')
@@ -543,7 +560,7 @@
       return;
     }
 
-    loggedIn = { id: data.id, name: data.name };
+    loggedIn = { id: data.id, name: data.name, isAdmin: false };
     sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
     closeModal();
     renderHeader();
@@ -562,7 +579,10 @@
   // ── Edit modal ─────────────────────────────────────
   window.openEdit = function(id) {
     const sh = allSheds.find(s => s.id === id);
-    if (!sh || !loggedIn || loggedIn.id !== sh.id) {
+    if (!sh || !loggedIn) {
+      toast('Please sign in to edit.', 'error'); return;
+    }
+    if (!loggedIn.isAdmin && loggedIn.id !== sh.id) {
       toast('You can only edit your own shed.', 'error'); return;
     }
     const days = sh.days || {};
@@ -718,12 +738,138 @@
       return;
     }
 
-    loggedIn.name = updates.name;
-    sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+    if (!loggedIn.isAdmin) {
+      loggedIn.name = updates.name;
+      sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+    }
     closeModal();
     await loadSheds();
     renderHeader();
     toast('Shed details saved successfully!');
+  };
+
+  // ── Admin Panel ────────────────────────────────────
+  window.openAdminPanel = function() {
+    const rows = allSheds.map(sh => `
+      <tr>
+        <td style="padding:8px 10px;font-weight:500">${esc(sh.name)}</td>
+        <td style="padding:8px 10px;color:var(--text-muted);font-size:0.85rem">${esc(sh.address||'—')}</td>
+        <td style="padding:8px 10px">
+          <code style="background:var(--tan);padding:2px 7px;border-radius:5px;font-size:0.82rem;border:1px solid var(--border)">${esc(sh.password||'')}</code>
+        </td>
+        <td style="padding:8px 10px;text-align:right">
+          <button class="btn btn-outline btn-sm" onclick="closeModal();openEdit('${sh.id}')">Edit</button>
+          <button class="btn btn-sm" style="color:var(--danger);border-color:var(--danger);background:white;margin-left:4px" onclick="confirmDeleteShed('${sh.id}','${esc(sh.name)}')">Remove</button>
+        </td>
+      </tr>`).join('');
+
+    renderModal(`
+      <div class="modal" style="max-width:800px">
+        <div class="modal-header">
+          <h2>&#9965; Admin Panel</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+
+          <div class="section-label">Add New Shed</div>
+          <div id="add-shed-error"></div>
+          <div class="form-grid" style="margin-bottom:1rem">
+            <div class="form-grid form-row-2">
+              <div class="field">
+                <label>Shed Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="new-shed-name" placeholder="e.g. Gosford Men's Shed" />
+              </div>
+              <div class="field">
+                <label>Address</label>
+                <input type="text" id="new-shed-address" placeholder="e.g. 12 Smith St, Gosford NSW 2250" />
+              </div>
+            </div>
+            <div class="form-grid form-row-2">
+              <div class="field">
+                <label>Password for this shed <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="new-shed-password" placeholder="e.g. gosford2024" />
+              </div>
+              <div class="field" style="justify-content:flex-end;padding-top:20px">
+                <button class="btn btn-primary" onclick="addNewShed()">&#43; Add Shed to Directory</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">All Sheds &amp; Passwords</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+              <thead>
+                <tr style="border-bottom:2px solid var(--tan-dark);text-align:left">
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Shed Name</th>
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Address</th>
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Password</th>
+                  <th style="padding:6px 10px"></th>
+                </tr>
+              </thead>
+              <tbody id="admin-shed-list">
+                ${rows || '<tr><td colspan="4" style="padding:1rem;text-align:center;color:var(--text-muted)">No sheds yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+      </div>`);
+  };
+
+  window.addNewShed = async function() {
+    const name     = document.getElementById('new-shed-name')?.value.trim();
+    const address  = document.getElementById('new-shed-address')?.value.trim();
+    const password = document.getElementById('new-shed-password')?.value.trim();
+
+    if (!name || !password) {
+      document.getElementById('add-shed-error').innerHTML =
+        '<div class="error-box">Shed name and password are required.</div>';
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('sheds')
+      .insert([{ name, address: address || '', password }])
+      .select()
+      .single();
+
+    if (error) {
+      document.getElementById('add-shed-error').innerHTML =
+        `<div class="error-box">Could not add shed: ${esc(error.message)}</div>`;
+      return;
+    }
+
+    await loadSheds();
+    closeModal();
+    toast(`"${name}" added to the directory!`);
+  };
+
+  window.confirmDeleteShed = function(id, name) {
+    renderModal(`
+      <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+          <h2>Remove Shed</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.95rem;line-height:1.6">Are you sure you want to remove <strong>${esc(name)}</strong> from the directory? This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger" onclick="deleteShed('${id}')">Yes, Remove Shed</button>
+        </div>
+      </div>`);
+  };
+
+  window.deleteShed = async function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    const { error } = await supabase.from('sheds').delete().eq('id', id);
+    if (error) { toast('Could not remove shed: ' + error.message, 'error'); return; }
+    await loadSheds();
+    closeModal();
+    toast(`"${sh ? sh.name : 'Shed'}" removed from directory.`);
   };
 
   // ── Modal helpers ──────────────────────────────────
@@ -757,7 +903,11 @@
   }
 
   // ── Expose globals needed by inline handlers ───────
-  window.openLogin  = openLogin;
+  window.openLogin       = openLogin;
+  window.openAdminPanel   = openAdminPanel;
+  window.addNewShed       = addNewShed;
+  window.confirmDeleteShed = confirmDeleteShed;
+  window.deleteShed       = deleteShed;
   window.openEdit   = openEdit;
   window.openView   = openView;
   window.doLogout   = doLogout;
