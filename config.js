@@ -6,14 +6,16 @@
 
 const CONFIG = {
 
-  // Your Supabase project URL  (looks like https://axxxxxxxxxxxx.supabase.co)
-  SUPABASE_URL: 'https://ijgmpgyiqfteqwudpcqf.supabase.co',
- 
-  // Your Supabase anon/public key  (long string starting with "eyJ…")
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqZ21wZ3lpcWZ0ZXF3dWRwY3FmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MjkzMzcsImV4cCI6MjA5NDIwNTMzN30.BfSBSHIdj1dxS2oHjJv9zYUehNBMeCqFoClgPn4zRJc',
+  // Your Supabase project URL  (looks like https://xxxxxxxxxxxx.supabase.co)
+  SUPABASE_URL: 'https://YOUR_PROJECT_ID.supabase.co',
 
-  ADMIN_PASSWORD:   'MKEAdmin2024',
-  
+  // Your Supabase anon/public key  (long string starting with "eyJ…")
+  SUPABASE_ANON_KEY: 'YOUR_ANON_KEY_HERE',
+
+  // Master admin password — grants access to edit ANY shed.
+  // Change this to something strong that only you know. Keep it private.
+  ADMIN_PASSWORD: 'MKEAdmin2024',
+
 };
 
 export default CONFIG;
