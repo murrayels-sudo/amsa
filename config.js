@@ -12,6 +12,8 @@ const CONFIG = {
   // Your Supabase anon/public key  (long string starting with "eyJ…")
   SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqZ21wZ3lpcWZ0ZXF3dWRwY3FmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2MjkzMzcsImV4cCI6MjA5NDIwNTMzN30.BfSBSHIdj1dxS2oHjJv9zYUehNBMeCqFoClgPn4zRJc,
 
+  ADMIN_PASSWORD:   'MKEAdmin2024',
+  
 };
 
 export default CONFIG;
