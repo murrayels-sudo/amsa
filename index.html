@@ -493,6 +493,7 @@
           <div class="section-label">Compliance</div>
           ${row('Last A.G.M. Date', sh.last_agm)}
           ${row('A.C.N.C. Last Report Date', sh.acnc_date)}
+          ${row('AMSA Website Last Updated', sh.amsa_updated)}
         </div>
         <div class="modal-footer">
           ${isMine
@@ -650,6 +651,9 @@
             <div class="field"><label>Last A.G.M. Date</label><input type="text" id="e-agm" value="${esc(sh.last_agm||'')}" placeholder="e.g. 15 March 2024" /></div>
             <div class="field"><label>A.C.N.C. Last Report Date</label><input type="text" id="e-acnc" value="${esc(sh.acnc_date||'')}" placeholder="e.g. 30 June 2024" /></div>
           </div>
+          <div class="form-grid form-row-2" style="margin-top:12px">
+            <div class="field"><label>AMSA Website Last Updated</label><input type="text" id="e-amsa-updated" value="${esc(sh.amsa_updated||'')}" placeholder="e.g. 20 May 2026" /></div>
+          </div>
 
           <div class="section-label">Change Password</div>
           <div class="form-grid form-row-2">
@@ -726,6 +730,7 @@
       tre_phone:     document.getElementById('e-tre-phone')?.value || '',
       last_agm:      document.getElementById('e-agm')?.value || '',
       acnc_date:     document.getElementById('e-acnc')?.value || '',
+      amsa_updated:  document.getElementById('e-amsa-updated')?.value || '',
     };
     if (newPass) updates.password = newPass;
 
