@@ -301,7 +301,19 @@
       .form-row-2 { grid-template-columns: 1fr; }
       .site-header h1 { font-size: 1rem; }
     }
+
+    /* ── Map panel ───────────────────────────────────── */
+    .app-body { display:flex; align-items:flex-start; }
+    .app-body .page { flex:1; min-width:0; }
+    .map-panel { width:0; flex-shrink:0; overflow:hidden; transition:width 0.35s ease; background:white; position:sticky; top:64px; height:calc(100vh - 64px); }
+    .map-panel.open { width:420px; border-left:3px solid var(--green-light); }
+    #shed-map { width:100%; height:100%; }
+    .map-close-btn { position:absolute; top:10px; right:10px; z-index:1000; background:var(--green-dark); color:white; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Source Sans 3',sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+    .map-close-btn:hover { background:var(--green-mid); }
+    @media (max-width:700px) { .map-panel.open { position:fixed; inset:0; width:100%!important; height:100%; top:0; z-index:90; } }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -319,6 +331,7 @@
 <!-- Toast area -->
 <div id="toast-area"></div>
 
+<div class="app-body">
 <!-- Main page -->
 <div class="page">
   <div class="toolbar">
@@ -339,7 +352,12 @@
   <div class="footer-note">
     To add your shed to the directory, contact your AMSA state coordinator to receive your shed password.
   </div>
-</div>
+</div><!-- /page -->
+
+<!-- Map panel -->
+<div class="map-panel" id="map-panel" style="position:relative"><div id="shed-map"></div><button class="map-close-btn" onclick="closeMap()">✕ Close map</button></div>
+
+</div><!-- /app-body -->
 
 <!-- Modal container -->
 <div id="modal-container"></div>
@@ -434,6 +452,7 @@
           ${isMine ? `<span class="tag tag-mine">${mineLabel}</span>` : ''}
           ${openDays.map(d=>`<span class="tag tag-day">${d}</span>`).join('')}
         </div>
+        ${sh.latitude && sh.longitude ? `<div style="margin-top:10px"><button class="btn btn-sm" style="background:#2c5f8a;color:white;border-color:#2c5f8a" onclick="event.stopPropagation();showOnMap('${sh.id}')">&#128205; Show on map</button></div>` : ''}
       </div>`;
     }).join('');
   }
@@ -796,7 +815,7 @@
                 <input type="text" id="new-shed-password" placeholder="e.g. gosford2024" />
               </div>
               <div class="field" style="justify-content:flex-end;padding-top:20px">
-                <button class="btn btn-primary" id="add-shed-btn" onclick="addNewShed()">&#43; Add Shed to Directory</button>
+                <button class="btn btn-primary" onclick="addNewShed(this)">&#43; Add Shed to Directory</button>
               </div>
             </div>
           </div>
@@ -853,12 +872,11 @@
     return { lat: null, lon: null };
   }
 
-  window.addNewShed = async function() {
+  window.addNewShed = async function(btn) {
     const name     = document.getElementById('new-shed-name')?.value.trim();
     const address  = document.getElementById('new-shed-address')?.value.trim();
     const password = document.getElementById('new-shed-password')?.value.trim();
     const errEl    = document.getElementById('add-shed-error');
-    const btn      = document.getElementById('add-shed-btn');
 
     if (!name || !password) {
       errEl.innerHTML = '<div class="error-box">Shed name and password are required.</div>';
@@ -885,7 +903,7 @@
       .select()
       .single();
 
-    if (btn) { btn.disabled = false; btn.textContent = '＋ Add Shed to Directory'; }
+    if (btn) { btn.disabled = false; btn.textContent = '+ Add Shed to Directory'; }
 
     if (error) {
       errEl.innerHTML = `<div class="error-box">Could not add shed: ${esc(error.message)}</div>`;
@@ -897,7 +915,7 @@
 
     const locMsg = lat !== null
       ? ' Map pin generated automatically. ✓'
-      : ' (No map pin — address not recognised. You can add coordinates manually in Supabase.)';
+      : ' (No map pin — address not recognised.)';
     toast(`"${name}" added to the directory!${locMsg}`);
   };
 
@@ -966,6 +984,38 @@
   window.openEdit   = openEdit;
   window.openView   = openView;
   window.doLogout   = doLogout;
+
+  // ── Map ────────────────────────────────────────────
+  let mapInstance = null;
+  let mapMarker   = null;
+
+  window.showOnMap = function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    if (!sh || !sh.latitude || !sh.longitude) return;
+    const panel = document.getElementById('map-panel');
+    panel.classList.add('open');
+    setTimeout(() => {
+      if (!mapInstance) {
+        mapInstance = L.map('shed-map').setView([sh.latitude, sh.longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapInstance);
+      } else {
+        mapInstance.setView([sh.latitude, sh.longitude], 15);
+        if (mapMarker) mapInstance.removeLayer(mapMarker);
+      }
+      mapInstance.invalidateSize();
+      mapMarker = L.marker([sh.latitude, sh.longitude])
+        .addTo(mapInstance)
+        .bindPopup('<strong>' + sh.name + '</strong><br>' + (sh.address||''))
+        .openPopup();
+    }, 360);
+  };
+
+  window.closeMap = function() {
+    document.getElementById('map-panel').classList.remove('open');
+    if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 360);
+  };
 
   boot();
 </script>
