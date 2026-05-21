@@ -826,14 +826,30 @@
 
   async function geocodeAddress(address) {
     if (!address) return { lat: null, lon: null };
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Australia')}&format=json&limit=1`;
-      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-      const data = await res.json();
-      if (data && data.length > 0) {
-        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    const query = encodeURIComponent(address + ', Australia');
+    const attempts = [
+      async () => {
+        const res = await fetch(`https://photon.komoot.io/api/?q=${query}&limit=1&lang=en`);
+        const d = await res.json();
+        if (d.features && d.features.length > 0) {
+          const [lon, lat] = d.features[0].geometry.coordinates;
+          return { lat, lon };
+        }
+        return null;
+      },
+      async () => {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=au`);
+        const d = await res.json();
+        if (d && d.length > 0) return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) };
+        return null;
       }
-    } catch(e) {}
+    ];
+    for (const attempt of attempts) {
+      try {
+        const result = await attempt();
+        if (result) return result;
+      } catch(e) {}
+    }
     return { lat: null, lon: null };
   }
 
