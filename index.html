@@ -6,8 +6,6 @@
   <title>AMSA Shed Directory</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     :root {
       --green-dark:   #1e4d0f;
@@ -303,31 +301,8 @@
       .form-row-2 { grid-template-columns: 1fr; }
       .site-header h1 { font-size: 1rem; }
     }
-
-    /* ── Map panel ───────────────────────────────────── */
-    .app-body { display: flex; align-items: flex-start; }
-    .app-body .page { flex: 1; min-width: 0; }
-    .map-panel {
-      width: 0; flex-shrink: 0; overflow: hidden;
-      transition: width 0.35s ease; background: white;
-      position: sticky; top: 64px; height: calc(100vh - 64px);
-    }
-    .map-panel.open { width: 420px; border-left: 3px solid var(--green-light); }
-    #shed-map { width: 100%; height: 100%; }
-    .map-close-btn {
-      position: absolute; top: 10px; right: 10px; z-index: 1000;
-      background: var(--green-dark); color: white; border: none;
-      border-radius: 6px; padding: 6px 12px; font-size: 12px;
-      font-weight: 600; cursor: pointer; font-family: 'Source Sans 3', sans-serif;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .map-close-btn:hover { background: var(--green-mid); }
-    .btn-map { background: #2c5f8a; color: white; border-color: #2c5f8a; }
-    .btn-map:hover { background: #1e4a6e; border-color: #1e4a6e; }
-    @media (max-width: 700px) {
-      .map-panel.open { position: fixed; inset: 0; width: 100% !important; height: 100%; top: 0; z-index: 90; }
-    }
-  </style></head>
+  </style>
+</head>
 <body>
 
 <!-- Header -->
@@ -343,9 +318,6 @@
 
 <!-- Toast area -->
 <div id="toast-area"></div>
-
-<!-- App body (page + map panel side by side) -->
-<div class="app-body">
 
 <!-- Main page -->
 <div class="page">
@@ -367,15 +339,7 @@
   <div class="footer-note">
     To add your shed to the directory, contact your AMSA state coordinator to receive your shed password.
   </div>
-</div><!-- /page -->
-
-<!-- Map panel -->
-<div class="map-panel" id="map-panel">
-  <div id="shed-map"></div>
-  <button class="map-close-btn" onclick="closeMap()">✕ Close map</button>
 </div>
-
-</div><!-- /app-body -->
 
 <!-- Modal container -->
 <div id="modal-container"></div>
@@ -470,9 +434,6 @@
           ${isMine ? `<span class="tag tag-mine">${mineLabel}</span>` : ''}
           ${openDays.map(d=>`<span class="tag tag-day">${d}</span>`).join('')}
         </div>
-        ${sh.latitude && sh.longitude
-          ? `<div style="margin-top:10px"><button class="btn btn-map btn-sm" onclick="event.stopPropagation();showOnMap('${sh.id}')">📍 Show on map</button></div>`
-          : ''}
       </div>`;
     }).join('');
   }
@@ -835,7 +796,7 @@
                 <input type="text" id="new-shed-password" placeholder="e.g. gosford2024" />
               </div>
               <div class="field" style="justify-content:flex-end;padding-top:20px">
-                <button class="btn btn-primary" onclick="addNewShed()">&#43; Add Shed to Directory</button>
+                <button class="btn btn-primary" id="add-shed-btn" onclick="addNewShed()">&#43; Add Shed to Directory</button>
               </div>
             </div>
           </div>
@@ -863,32 +824,65 @@
       </div>`);
   };
 
+  async function geocodeAddress(address) {
+    if (!address) return { lat: null, lon: null };
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Australia')}&format=json&limit=1`;
+      const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+      const data = await res.json();
+      if (data && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+      }
+    } catch(e) {}
+    return { lat: null, lon: null };
+  }
+
   window.addNewShed = async function() {
     const name     = document.getElementById('new-shed-name')?.value.trim();
     const address  = document.getElementById('new-shed-address')?.value.trim();
     const password = document.getElementById('new-shed-password')?.value.trim();
+    const errEl    = document.getElementById('add-shed-error');
+    const btn      = document.getElementById('add-shed-btn');
 
     if (!name || !password) {
-      document.getElementById('add-shed-error').innerHTML =
-        '<div class="error-box">Shed name and password are required.</div>';
+      errEl.innerHTML = '<div class="error-box">Shed name and password are required.</div>';
       return;
     }
 
+    // Disable button and show progress
+    if (btn) { btn.disabled = true; btn.textContent = 'Looking up location…'; }
+    errEl.innerHTML = '';
+
+    // Geocode the address
+    const { lat, lon } = await geocodeAddress(address);
+
+    const newShed = {
+      name,
+      address: address || '',
+      password,
+      ...(lat !== null && lon !== null ? { latitude: lat, longitude: lon } : {})
+    };
+
     const { data, error } = await supabase
       .from('sheds')
-      .insert([{ name, address: address || '', password }])
+      .insert([newShed])
       .select()
       .single();
 
+    if (btn) { btn.disabled = false; btn.textContent = '＋ Add Shed to Directory'; }
+
     if (error) {
-      document.getElementById('add-shed-error').innerHTML =
-        `<div class="error-box">Could not add shed: ${esc(error.message)}</div>`;
+      errEl.innerHTML = `<div class="error-box">Could not add shed: ${esc(error.message)}</div>`;
       return;
     }
 
     await loadSheds();
     closeModal();
-    toast(`"${name}" added to the directory!`);
+
+    const locMsg = lat !== null
+      ? ' Map pin generated automatically. ✓'
+      : ' (No map pin — address not recognised. You can add coordinates manually in Supabase.)';
+    toast(`"${name}" added to the directory!${locMsg}`);
   };
 
   window.confirmDeleteShed = function(id, name) {
@@ -956,40 +950,6 @@
   window.openEdit   = openEdit;
   window.openView   = openView;
   window.doLogout   = doLogout;
-
-  // ── Map ────────────────────────────────────────────
-  let mapInstance = null;
-  let mapMarker   = null;
-
-  window.showOnMap = function(id) {
-    const sh = allSheds.find(s => s.id === id);
-    if (!sh || !sh.latitude || !sh.longitude) return;
-
-    const panel = document.getElementById('map-panel');
-    panel.classList.add('open');
-
-    setTimeout(() => {
-      if (!mapInstance) {
-        mapInstance = L.map('shed-map').setView([sh.latitude, sh.longitude], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(mapInstance);
-      } else {
-        mapInstance.setView([sh.latitude, sh.longitude], 15);
-        if (mapMarker) mapInstance.removeLayer(mapMarker);
-      }
-      mapInstance.invalidateSize();
-      mapMarker = L.marker([sh.latitude, sh.longitude])
-        .addTo(mapInstance)
-        .bindPopup(`<strong>${esc(sh.name)}</strong><br>${esc(sh.address||'')}`)
-        .openPopup();
-    }, 360);
-  };
-
-  window.closeMap = function() {
-    document.getElementById('map-panel').classList.remove('open');
-    if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 360);
-  };
 
   boot();
 </script>
