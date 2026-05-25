@@ -314,6 +314,16 @@
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <!-- Favicon & app icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1e4d0f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AMSA Sheds">
 </head>
 <body>
 
@@ -452,7 +462,7 @@
           ${isMine ? `<span class="tag tag-mine">${mineLabel}</span>` : ''}
           ${openDays.map(d=>`<span class="tag tag-day">${d}</span>`).join('')}
         </div>
-        ${(sh.latitude !== null && sh.latitude !== undefined && sh.latitude !== '' && sh.longitude !== null && sh.longitude !== undefined && sh.longitude !== '') ? `<div style="margin-top:10px"><button class="btn btn-sm" style="background:#2c5f8a;color:white;border-color:#2c5f8a" onclick="event.stopPropagation();showOnMap('${sh.id}')">&#128205; Show on map</button></div>` : ''}
+        ${sh.latitude && sh.longitude ? `<div style="margin-top:10px"><button class="btn btn-sm" style="background:#2c5f8a;color:white;border-color:#2c5f8a" onclick="event.stopPropagation();showOnMap('${sh.id}')">&#128205; Show on map</button></div>` : ''}
       </div>`;
     }).join('');
   }
@@ -991,23 +1001,21 @@
 
   window.showOnMap = function(id) {
     const sh = allSheds.find(s => s.id === id);
-    const lat = parseFloat(sh && sh.latitude);
-    const lon = parseFloat(sh && sh.longitude);
-    if (!sh || isNaN(lat) || isNaN(lon)) return;
+    if (!sh || !sh.latitude || !sh.longitude) return;
     const panel = document.getElementById('map-panel');
     panel.classList.add('open');
     setTimeout(() => {
       if (!mapInstance) {
-        mapInstance = L.map('shed-map').setView([lat, lon], 15);
+        mapInstance = L.map('shed-map').setView([sh.latitude, sh.longitude], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(mapInstance);
       } else {
-        mapInstance.setView([lat, lon], 15);
+        mapInstance.setView([sh.latitude, sh.longitude], 15);
         if (mapMarker) mapInstance.removeLayer(mapMarker);
       }
       mapInstance.invalidateSize();
-      mapMarker = L.marker([lat, lon])
+      mapMarker = L.marker([sh.latitude, sh.longitude])
         .addTo(mapInstance)
         .bindPopup('<strong>' + sh.name + '</strong><br>' + (sh.address||''))
         .openPopup();

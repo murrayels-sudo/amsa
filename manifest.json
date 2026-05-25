@@ -1,0 +1,24 @@
+{
+  "name": "AMSA Shed Directory",
+  "short_name": "AMSA Sheds",
+  "description": "Find your local Australian Men's Shed",
+  "start_url": "/amsa/",
+  "display": "standalone",
+  "background_color": "#1e4d0f",
+  "theme_color": "#1e4d0f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
