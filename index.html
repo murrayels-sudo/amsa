@@ -424,7 +424,7 @@
       el.innerHTML = `
         <span class="user-pill">${pill}</span>
         ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>' : ''}
-        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="window.open('compliance.html','_blank')">&#128203; Compliance Report</button>' : ''}
+        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openCompliance()">&#128203; Compliance Report</button>' : ''}
         <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
     } else {
       el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>`;
@@ -1016,6 +1016,10 @@
   window.closeMap = function() {
     document.getElementById('map-panel').classList.remove('open');
     if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 360);
+  };
+
+  window.openCompliance = function() {
+    window.open('compliance.html', '_blank');
   };
 
   boot();
