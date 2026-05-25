@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMSA — Compliance Report</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green-dark:  #1e4d0f;
+    --green-mid:   #2d7a1a;
+    --green-light: #4caf50;
+    --green-pale:  #e8f5e2;
+    --green-border:#b8dba8;
+    --white:       #ffffff;
+    --off:         #f4f7f2;
+    --text:        #1a1a1a;
+    --text-mid:    #555;
+    --red:         #b91c1c;
+    --red-pale:    #fee2e2;
+    --amber:       #92400e;
+    --amber-pale:  #fef3c7;
+    --green-ok:    #14532d;
+    --green-ok-pale:#dcfce7;
+    --grey-pale:   #f3f4f6;
+    --grey-text:   #6b7280;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--off);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    background: var(--green-dark);
+    color: white;
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .header-left h1 { font-size: 17px; font-weight: 700; }
+  .header-left p  { font-size: 10px; color: var(--green-pale); opacity: 0.85; }
+  .btn-ghost {
+    background: rgba(255,255,255,0.12);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.22); }
+
+  /* ── LOGIN SCREEN ───────────────────────────────── */
+  .login-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .login-box {
+    background: white;
+    border-radius: 12px;
+    padding: 36px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .login-box h2 {
+    font-size: 20px;
+    color: var(--green-dark);
+    margin-bottom: 6px;
+  }
+  .login-box p {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+  }
+  .login-box input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--green-border);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 12px;
+    font-family: inherit;
+  }
+  .login-box input:focus { border-color: var(--green-light); }
+  .btn-primary {
+    background: var(--green-dark);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    font-family: inherit;
+  }
+  .btn-primary:hover { background: var(--green-mid); }
+  .error-msg {
+    background: var(--red-pale);
+    color: var(--red);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+
+  /* ── REPORT SCREEN ──────────────────────────────── */
+  .report-screen { flex: 1; padding: 28px 24px 60px; display: none; }
+
+  .report-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--green-dark);
+    margin-bottom: 4px;
+  }
+  .report-sub {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 24px;
+  }
+
+  /* ── LEGEND ─────────────────────────────────────── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--text-mid);
+  }
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .dot-red    { background: var(--red-pale);      border: 1.5px solid #fca5a5; }
+  .dot-amber  { background: var(--amber-pale);    border: 1.5px solid #fcd34d; }
+  .dot-green  { background: var(--green-ok-pale); border: 1.5px solid #86efac; }
+  .dot-grey   { background: var(--grey-pale);     border: 1.5px solid #d1d5db; }
+
+  /* ── TABLE WRAPPER ──────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 13px;
+    min-width: 700px;
+  }
+
+  thead th {
+    background: var(--green-dark);
+    color: white;
+    padding: 11px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+    user-select: none;
+  }
+  thead th.sortable { cursor: pointer; }
+  thead th.sortable:hover { background: var(--green-mid); }
+  .sort-icon { margin-left: 5px; opacity: 0.6; font-size: 10px; }
+  thead th.sort-asc  .sort-icon::after { content: ' ▲'; opacity: 1; }
+  thead th.sort-desc .sort-icon::after { content: ' ▼'; opacity: 1; }
+  thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: ' ⇅'; }
+
+  tbody tr { border-bottom: 1px solid #e5e7eb; transition: opacity 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { filter: brightness(0.97); }
+
+  td { padding: 10px 14px; vertical-align: middle; }
+
+  .shed-name { font-weight: 600; color: var(--text); }
+
+  /* ── DATE CELL COLOURS ──────────────────────────── */
+  .date-cell { border-radius: 6px; padding: 5px 10px; font-size: 12px; font-weight: 500; white-space: nowrap; display: inline-block; }
+  .date-red    { background: var(--red-pale);      color: var(--red);      }
+  .date-amber  { background: var(--amber-pale);    color: var(--amber);    }
+  .date-green  { background: var(--green-ok-pale); color: var(--green-ok); }
+  .date-none   { background: var(--grey-pale);     color: var(--grey-text);font-style: italic; }
+
+  /* ── PRINT ──────────────────────────────────────── */
+  .print-btn {
+    background: white;
+    border: 1.5px solid var(--green-border);
+    color: var(--green-dark);
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-bottom: 16px;
+  }
+  .print-btn:hover { background: var(--green-pale); }
+
+  @media print {
+    header, .print-btn, .legend { display: none !important; }
+    .report-screen { padding: 0; }
+    .table-wrap { box-shadow: none; }
+    body { background: white; }
+  }
+
+  @media (max-width: 600px) {
+    .report-screen { padding: 16px; }
+    .report-title { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>AMSA Shed Directory</h1>
+    <p>Compliance Report — Admin only</p>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span id="admin-badge" style="font-size:12px;color:var(--green-pale);display:none;">&#9733; Admin</span>
+    <button class="btn-ghost" onclick="window.close()">&#8592; Back to Directory</button>
+  </div>
+</header>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>&#128203; Compliance Report</h2>
+    <p>This report is restricted to administrators.<br>Please enter the Admin password to continue.</p>
+    <input type="password" id="adminPw" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary" onclick="doLogin()">View Report</button>
+    <div class="error-msg" id="loginErr">Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- REPORT SCREEN -->
+<div class="report-screen" id="reportScreen">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
+    <div>
+      <div class="report-title">&#128203; Compliance Report</div>
+      <div class="report-sub" id="reportSub">Loading…</div>
+    </div>
+    <button class="print-btn" onclick="window.print()">&#128438; Print / Save as PDF</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot dot-red"></div> Overdue / not entered (more than 12 months ago)</div>
+    <div class="legend-item"><div class="legend-dot dot-amber"></div> Due soon (6–12 months ago)</div>
+    <div class="legend-item"><div class="legend-dot dot-green"></div> Up to date (within 6 months)</div>
+    <div class="legend-item"><div class="legend-dot dot-grey"></div> Not recorded</div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th class="sortable" data-col="0" onclick="sortTable(0)">Shed Name<span class="sort-icon"></span></th>
+          <th class="sortable" data-col="1" onclick="sortTable(1)">Last A.G.M. Date<span class="sort-icon"></span></th>
+          <th class="sortable" data-col="2" onclick="sortTable(2)">A.C.N.C. Last Report<span class="sort-icon"></span></th>
+          <th class="sortable" data-col="3" onclick="sortTable(3)">AMSA Website Updated<span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="reportBody">
+        <tr><td colspan="4" style="text-align:center;padding:30px;color:#aaa;">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+import CONFIG from './config.js';
+const { createClient } = supabase;
+const db = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+const ADMIN_PW = CONFIG.ADMIN_PASSWORD || '';
+
+let allSheds = [];
+let sortCol = 0;
+let sortDir = 'asc';
+
+// ── LOGIN ─────────────────────────────────────────────
+window.doLogin = function() {
+  const pw = document.getElementById('adminPw').value;
+  const err = document.getElementById('loginErr');
+  if (pw === ADMIN_PW) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('reportScreen').style.display = 'block';
+    document.getElementById('admin-badge').style.display = 'inline';
+    err.style.display = 'none';
+    loadReport();
+  } else {
+    err.style.display = 'block';
+  }
+};
+
+// ── LOAD DATA ─────────────────────────────────────────
+async function loadReport() {
+  const { data, error } = await db
+    .from('sheds')
+    .select('name, last_agm, acnc_date, amsa_updated')
+    .order('name');
+
+  if (error) {
+    document.getElementById('reportBody').innerHTML =
+      `<tr><td colspan="4" style="text-align:center;padding:30px;color:#b91c1c;">Error loading data: ${error.message}</td></tr>`;
+    return;
+  }
+
+  allSheds = data || [];
+  const now = new Date().toLocaleDateString('en-AU', {day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('reportSub').textContent =
+    `${allSheds.length} shed${allSheds.length !== 1 ? 's' : ''} — generated ${now}`;
+  renderTable();
+}
+
+// ── DATE COLOUR LOGIC ─────────────────────────────────
+function classifyDate(dateStr) {
+  if (!dateStr || dateStr.trim() === '') return 'none';
+  // Try to parse various date formats
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) {
+    // Try DD Month YYYY format
+    const months = {january:0,february:1,march:2,april:3,may:4,june:5,
+      july:6,august:7,september:8,october:9,november:10,december:11};
+    const parts = dateStr.trim().toLowerCase().split(/[\s\/\-]+/);
+    if (parts.length === 3) {
+      const day = parseInt(parts[0]);
+      const mon = months[parts[1]];
+      const yr  = parseInt(parts[2]);
+      if (!isNaN(day) && mon !== undefined && !isNaN(yr)) {
+        const d = new Date(yr, mon, day);
+        return ageClass(d);
+      }
+    }
+    return 'none'; // unparseable
+  }
+  return ageClass(parsed);
+}
+
+function ageClass(date) {
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMonths = diffMs / (1000 * 60 * 60 * 24 * 30.44);
+  if (diffMonths > 12) return 'red';
+  if (diffMonths > 6)  return 'amber';
+  return 'green';
+}
+
+function dateCell(val) {
+  const cls = classifyDate(val);
+  const display = val && val.trim() ? val.trim() : 'Not recorded';
+  return `<td><span class="date-cell date-${cls}">${display}</span></td>`;
+}
+
+// ── RENDER ────────────────────────────────────────────
+function renderTable() {
+  const sorted = [...allSheds].sort((a, b) => {
+    let va, vb;
+    if (sortCol === 0) {
+      va = (a.name || '').toLowerCase();
+      vb = (b.name || '').toLowerCase();
+    } else {
+      const fields = ['', 'last_agm', 'acnc_date', 'amsa_updated'];
+      va = (a[fields[sortCol]] || '').toLowerCase();
+      vb = (b[fields[sortCol]] || '').toLowerCase();
+    }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  document.getElementById('reportBody').innerHTML = sorted.map(sh => `
+    <tr>
+      <td class="shed-name">${esc(sh.name || '—')}</td>
+      ${dateCell(sh.last_agm)}
+      ${dateCell(sh.acnc_date)}
+      ${dateCell(sh.amsa_updated)}
+    </tr>`).join('');
+
+  // Update sort indicators
+  document.querySelectorAll('thead th').forEach((th, i) => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (i === sortCol) th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+  });
+}
+
+window.sortTable = function(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortCol = col;
+    sortDir = 'asc';
+  }
+  renderTable();
+};
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

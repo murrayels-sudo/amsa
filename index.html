@@ -314,16 +314,6 @@
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <!-- Favicon & app icons -->
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1e4d0f">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="AMSA Sheds">
 </head>
 <body>
 
@@ -434,6 +424,7 @@
       el.innerHTML = `
         <span class="user-pill">${pill}</span>
         ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>' : ''}
+        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="window.open('compliance.html','_blank')">&#128203; Compliance Report</button>' : ''}
         <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
     } else {
       el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>`;
