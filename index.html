@@ -1,1 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMSA Shed Directory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green-dark:   #1e4d0f;
+      --green-mid:    #2d7a1a;
+      --green-light:  #4caf30;
+      --green-pale:   #e8f5e2;
+      --green-border: #b8dba8;
+      --tan:          #f5f0e8;
+      --tan-dark:     #ede5d5;
+      --brown:        #6b4c2a;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #444;
+      --text-muted:   #777;
+      --white:        #ffffff;
+      --border:       #d4c9b8;
+      --danger:       #b91c1c;
+      --danger-pale:  #fee2e2;
+      --shadow:       0 2px 8px rgba(0,0,0,0.10);
+      --radius:       10px;
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--tan);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    .site-header {
+      background: var(--green-dark);
+      color: white;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+    .site-header h1 {
+      font-family: 'Lora', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      line-height: 1.2;
+    }
+    .site-header p {
+      font-size: 0.75rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+    .user-pill {
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      color: white;
+      white-space: nowrap;
+    }
+    .user-pill strong { color: #a8e090; }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-family: 'Source Sans 3', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .btn-primary   { background: var(--green-mid); color: white; border-color: var(--green-mid); }
+    .btn-primary:hover { background: var(--green-dark); border-color: var(--green-dark); }
+    .btn-outline   { background: white; color: var(--text-dark); border-color: var(--border); }
+    .btn-outline:hover { background: var(--tan); }
+    .btn-ghost     { background: rgba(255,255,255,0.12); color: white; border-color: rgba(255,255,255,0.25); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.22); }
+    .btn-danger    { background: var(--danger); color: white; border-color: var(--danger); }
+    .btn-danger:hover { background: #991b1b; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Main layout ─────────────────────────────────── */
+    .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem; }
+
+    /* ── Toolbar ─────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 9px 14px 9px 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      background: white;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--text-dark);
+    }
+    .search-wrap input:focus { outline: 2px solid var(--green-light); outline-offset: 1px; border-color: transparent; }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+    .count-badge {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      padding: 4px 0;
+    }
+
+    /* ── Shed grid ───────────────────────────────────── */
+    .shed-grid { display: grid; gap: 14px; }
+    @media (min-width: 640px) { .shed-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 900px) { .shed-grid { grid-template-columns: 1fr 1fr 1fr; } }
+
+    .shed-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+      position: relative;
+    }
+    .shed-card:hover { box-shadow: var(--shadow); border-color: var(--green-border); transform: translateY(-1px); }
+    .shed-card.is-mine { border-left: 4px solid var(--green-mid); }
+
+    .card-name { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
+    .card-addr { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .tag {
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid;
+      font-weight: 500;
+    }
+    .tag-day  { background: var(--green-pale); color: var(--green-dark); border-color: var(--green-border); }
+    .tag-mine { background: var(--green-mid); color: white; border-color: var(--green-mid); }
+
+    .empty-state {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 4rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+    /* ── Loading spinner ─────────────────────────────── */
+    .spinner-wrap { text-align: center; padding: 4rem; color: var(--text-muted); }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--green-border);
+      border-top-color: var(--green-mid); border-radius: 50%;
+      animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ───────────────────────────────────────── */
+    #toast-area { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast {
+      padding: 10px 20px; border-radius: var(--radius); font-size: 0.875rem; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18); white-space: nowrap;
+      animation: toast-in 0.25s ease; pointer-events: none;
+    }
+    .toast-success { background: var(--green-dark); color: white; }
+    .toast-error   { background: var(--danger); color: white; }
+    @keyframes toast-in { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Modal backdrop ──────────────────────────────── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      display: flex; align-items: flex-start; justify-content: center;
+      z-index: 100; padding: 2rem 1rem; overflow-y: auto;
+    }
+    .modal {
+      background: white; border-radius: 14px; width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18); animation: modal-in 0.2s ease;
+    }
+    @keyframes modal-in { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--tan-dark);
+    }
+    .modal-header h2 { font-family: 'Lora', serif; font-size: 1.2rem; font-weight: 600; }
+    .modal-body { padding: 1.5rem; overflow-y: auto; max-height: 72vh; }
+    .modal-footer {
+      padding: 1rem 1.5rem; border-top: 1px solid var(--tan-dark);
+      display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;
+    }
+
+    /* ── View modal sections ─────────────────────────── */
+    .section-label {
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--green-dark); margin: 1.25rem 0 0.6rem;
+      padding-bottom: 4px; border-bottom: 2px solid var(--green-pale);
+    }
+    .section-label:first-child { margin-top: 0; }
+    .detail-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 6px 0; border-bottom: 1px solid var(--tan-dark);
+      font-size: 0.9rem; line-height: 1.4;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { min-width: 190px; color: var(--text-muted); flex-shrink: 0; font-size: 0.85rem; padding-top: 1px; }
+    .detail-val { color: var(--text-dark); flex: 1; }
+    .detail-val a { color: var(--green-mid); text-decoration: none; }
+    .detail-val a:hover { text-decoration: underline; }
+
+    /* ── Edit form ───────────────────────────────────── */
+    .form-grid { display: grid; gap: 12px; }
+    .form-row-2 { grid-template-columns: 1fr 1fr; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.8rem; font-weight: 600; color: var(--text-mid); }
+    .field input, .field textarea, .field select {
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--text-dark);
+      background: white;
+    }
+    .field input:focus, .field textarea:focus { outline: 2px solid var(--green-light); outline-offset: 1px; border-color: transparent; }
+    .field textarea { resize: vertical; min-height: 64px; }
+    .field-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Days grid ───────────────────────────────────── */
+    .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+    .day-card {
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 10px;
+      background: var(--tan);
+    }
+    .day-card.active { background: var(--green-pale); border-color: var(--green-border); }
+    .day-card label { display: flex; align-items: center; gap: 7px; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--text-mid); margin-bottom: 5px; }
+    .day-card.active label { color: var(--green-dark); }
+    .day-card input[type=checkbox] { accent-color: var(--green-mid); width: 15px; height: 15px; cursor: pointer; }
+    .day-card input[type=text] {
+      width: 100%; padding: 4px 7px; font-size: 0.78rem;
+      border: 1px solid var(--green-border); border-radius: 5px;
+      background: white; font-family: 'Source Sans 3', sans-serif;
+    }
+
+    /* ── Login modal ─────────────────────────────────── */
+    .login-modal { max-width: 420px; }
+    .login-note {
+      font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;
+    }
+    .error-box {
+      background: var(--danger-pale); color: var(--danger);
+      border: 1px solid #fca5a5; border-radius: 8px;
+      padding: 9px 13px; font-size: 0.85rem; margin-bottom: 12px;
+    }
+
+    /* ── Footer note ─────────────────────────────────── */
+    .footer-note {
+      margin-top: 2.5rem; text-align: center;
+      font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      .detail-label { min-width: 140px; }
+      .form-row-2 { grid-template-columns: 1fr; }
+      .site-header h1 { font-size: 1rem; }
+    }
+
+    /* ── Map panel ───────────────────────────────────── */
+    .app-body { display:flex; align-items:flex-start; }
+    .app-body .page { flex:1; min-width:0; }
+    .map-panel { width:0; flex-shrink:0; overflow:hidden; transition:width 0.35s ease; background:white; position:sticky; top:64px; height:calc(100vh - 64px); }
+    .map-panel.open { width:420px; border-left:3px solid var(--green-light); }
+    #shed-map { width:100%; height:100%; }
+    .map-close-btn { position:absolute; top:10px; right:10px; z-index:1000; background:var(--green-dark); color:white; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Source Sans 3',sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+    .map-close-btn:hover { background:var(--green-mid); }
+    @media (max-width:700px) { .map-panel.open { position:fixed; inset:0; width:100%!important; height:100%; top:0; z-index:90; } }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <div>
+    <h1>AMSA Shed Directory</h1>
+    <p>Australian Men's Shed Association — Member Register &nbsp;|&nbsp; &copy; MKEApps</p>
+  </div>
+  <div class="header-right" id="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>
+  </div>
+</header>
+
+<!-- Toast area -->
+<div id="toast-area"></div>
+
+<div class="app-body">
+<!-- Main page -->
+<div class="page">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Search by shed name or suburb…" oninput="handleSearch()" />
+    </div>
+    <span class="count-badge" id="count-badge"></span>
+  </div>
+
+  <div class="shed-grid" id="shed-grid">
+    <div class="spinner-wrap" style="grid-column:1/-1">
+      <div class="spinner"></div>
+      <p>Loading sheds…</p>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    To add your shed to the directory, contact your AMSA state coordinator to receive your shed password.
+  </div>
+</div><!-- /page -->
+
+<!-- Map panel -->
+<div class="map-panel" id="map-panel" style="position:relative"><div id="shed-map"></div><button class="map-close-btn" onclick="closeMap()">✕ Close map</button></div>
+
+</div><!-- /app-body -->
+
+<!-- Modal container -->
+<div id="modal-container"></div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  import CONFIG from './config.js';
+
+  const supabase = createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+  const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  // ── State ──────────────────────────────────────────
+  let allSheds = [];
+  let loggedIn = null; // { id, name }
+  let searchTerm = '';
+
+  // ── Boot ───────────────────────────────────────────
+  async function boot() {
+    await loadSheds();
+    restoreSession();
+  }
+
+  function restoreSession() {
+    try {
+      const saved = sessionStorage.getItem('amsa_session');
+      if (saved) { loggedIn = JSON.parse(saved); renderHeader(); }
+    } catch(e) {}
+  }
+
+  // ── Data ───────────────────────────────────────────
+  async function loadSheds() {
+    const { data, error } = await supabase
+      .from('sheds')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      renderGrid([]);
+      toast('Could not load sheds: ' + error.message, 'error');
+      return;
+    }
+    allSheds = data || [];
+    renderGrid(filteredSheds());
+    updateCount();
+  }
+
+  function filteredSheds() {
+    if (!searchTerm) return allSheds;
+    const q = searchTerm.toLowerCase();
+    return allSheds.filter(s =>
+      (s.name||'').toLowerCase().includes(q) ||
+      (s.address||'').toLowerCase().includes(q)
+    );
+  }
+
+  // ── Render header ──────────────────────────────────
+  function renderHeader() {
+    const el = document.getElementById('header-right');
+    if (loggedIn) {
+      const pill = loggedIn.isAdmin
+        ? '&#9733; Admin — All Sheds'
+        : 'Editing: <strong>' + esc(loggedIn.name) + '</strong>';
+      el.innerHTML = `
+        <span class="user-pill">${pill}</span>
+        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>' : ''}
+        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="window.open('compliance.html','_blank')">&#128203; Compliance Report</button>' : ''}
+        <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
+    } else {
+      el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>`;
+    }
+  }
+
+  // ── Render shed grid ───────────────────────────────
+  function renderGrid(sheds) {
+    const el = document.getElementById('shed-grid');
+    if (!sheds.length) {
+      el.innerHTML = `<div class="empty-state">
+        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <p>No sheds found.</p>
+      </div>`;
+      return;
+    }
+    el.innerHTML = sheds.map(sh => {
+      const days = sh.days || {};
+      const openDays = DAYS.filter(d => days[d] && days[d].open).map(d => d.slice(0,3));
+      const isMine = loggedIn && (loggedIn.isAdmin || loggedIn.id === sh.id);
+      const mineLabel = loggedIn && loggedIn.isAdmin ? '&#9733; Admin' : '&#9733; Your shed';
+      return `<div class="shed-card${isMine?' is-mine':''}" onclick="openView('${sh.id}')">
+        <div class="card-name">${esc(sh.name)}</div>
+        <div class="card-addr">${esc(sh.address||'')}</div>
+        <div class="card-tags">
+          ${isMine ? `<span class="tag tag-mine">${mineLabel}</span>` : ''}
+          ${openDays.map(d=>`<span class="tag tag-day">${d}</span>`).join('')}
+        </div>
+        ${sh.latitude && sh.longitude ? `<div style="margin-top:10px"><button class="btn btn-sm" style="background:#2c5f8a;color:white;border-color:#2c5f8a" onclick="event.stopPropagation();showOnMap('${sh.id}')">&#128205; Show on map</button></div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function updateCount() {
+    const f = filteredSheds();
+    document.getElementById('count-badge').textContent =
+      `${f.length} shed${f.length !== 1 ? 's' : ''}`;
+  }
+
+  // ── Search ─────────────────────────────────────────
+  window.handleSearch = function() {
+    searchTerm = document.getElementById('search-input').value.trim();
+    renderGrid(filteredSheds());
+    updateCount();
+  };
+
+  // ── View modal ─────────────────────────────────────
+  window.openView = function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    if (!sh) return;
+    const isMine = loggedIn && (loggedIn.isAdmin || loggedIn.id === sh.id);
+    const days = sh.days || {};
+    const openDays = DAYS.filter(d => days[d] && days[d].open);
+
+    function row(label, val, isLink) {
+      const display = val
+        ? (isLink ? `<a href="${esc(val)}" target="_blank">${esc(val)}</a>` : esc(val))
+        : '—';
+      return `<div class="detail-row"><span class="detail-label">${label}</span><span class="detail-val">${display}</span></div>`;
+    }
+
+    const daysHTML = openDays.length
+      ? openDays.map(d => `<div class="detail-row"><span class="detail-label">${d}</span><span class="detail-val">${esc(days[d].hours || '')}</span></div>`).join('')
+      : '<div class="detail-row"><span class="detail-val" style="color:var(--text-muted)">Not specified</span></div>';
+
+    renderModal(`
+      <div class="modal" style="max-width:640px">
+        <div class="modal-header">
+          <h2>${esc(sh.name)}</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>
+        </div>
+        <div class="modal-body">
+          <div class="section-label">Shed Information</div>
+          ${row('Shed Name', sh.name)}
+          ${row('Address', sh.address)}
+          ${row('Email Address', sh.email)}
+          ${row('Contact Details', sh.contact)}
+          ${sh.website ? row('Website (AMSA page)', sh.website, true) : ''}
+          <div class="section-label">Opening Times</div>
+          ${row('General Description', sh.opening_times)}
+          <div style="margin-top:4px"><div class="detail-row" style="align-items:flex-start"><span class="detail-label">Days &amp; Hours</span><span class="detail-val">${daysHTML}</span></div></div>
+          <div class="section-label">Executive Team</div>
+          ${row('President', sh.president + (sh.pres_phone ? '  ·  ' + sh.pres_phone : ''))}
+          ${row('Secretary', sh.secretary + (sh.sec_phone  ? '  ·  ' + sh.sec_phone  : ''))}
+          ${row('Treasurer', sh.treasurer + (sh.tre_phone  ? '  ·  ' + sh.tre_phone  : ''))}
+          <div class="section-label">Compliance</div>
+          ${row('Last A.G.M. Date', sh.last_agm)}
+          ${row('A.C.N.C. Last Report Date', sh.acnc_date)}
+          ${row('AMSA Website Last Updated', sh.amsa_updated)}
+        </div>
+        <div class="modal-footer">
+          ${isMine
+            ? `<button class="btn btn-primary" onclick="closeModal();openEdit('${sh.id}')">&#9998; ${loggedIn && loggedIn.isAdmin ? 'Edit This Shed (Admin)' : 'Edit My Shed Details'}</button>`
+            : (!loggedIn ? `<button class="btn btn-outline" onclick="closeModal();openLogin()">Sign in to edit your shed</button>` : '')
+          }
+          <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+      </div>`);
+  };
+
+  // ── Login modal ─────────────────────────────────────
+  window.openLogin = function() {
+    renderModal(`
+      <div class="modal login-modal">
+        <div class="modal-header">
+          <h2>Sign in to edit your shed</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+          <p class="login-note">Enter your shed's password to edit your own details, or the admin password to edit any shed. You can browse all sheds without signing in.</p>
+          <div id="login-error"></div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Shed Password</label>
+            <input type="password" id="login-pass" placeholder="Enter your shed's password"
+              onkeydown="if(event.key==='Enter')submitLogin()" autofocus />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitLogin()" id="login-btn">Sign In</button>
+        </div>
+      </div>`);
+    setTimeout(() => document.getElementById('login-pass')?.focus(), 60);
+  };
+
+  window.submitLogin = async function() {
+    const pass = document.getElementById('login-pass')?.value;
+    if (!pass) return;
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Checking…';
+
+    // Check admin password first
+    if (pass === CONFIG.ADMIN_PASSWORD) {
+      loggedIn = { id: 'admin', name: 'Administrator', isAdmin: true };
+      sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+      closeModal();
+      renderHeader();
+      renderGrid(filteredSheds());
+      toast('Welcome, Admin! You can edit all sheds.');
+      return;
+    }
+
+    // Otherwise check individual shed passwords
+    const { data, error } = await supabase
+      .from('sheds')
+      .select('id, name')
+      .eq('password', pass)
+      .single();
+
+    if (error || !data) {
+      document.getElementById('login-error').innerHTML =
+        `<div class="error-box">Incorrect password. Please try again.</div>`;
+      btn.disabled = false; btn.textContent = 'Sign In';
+      return;
+    }
+
+    loggedIn = { id: data.id, name: data.name, isAdmin: false };
+    sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+    closeModal();
+    renderHeader();
+    renderGrid(filteredSheds());
+    toast(`Welcome! Signed in as ${data.name}.`);
+  };
+
+  window.doLogout = function() {
+    loggedIn = null;
+    sessionStorage.removeItem('amsa_session');
+    renderHeader();
+    renderGrid(filteredSheds());
+    toast('Signed out.');
+  };
+
+  // ── Edit modal ─────────────────────────────────────
+  window.openEdit = function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    if (!sh || !loggedIn) {
+      toast('Please sign in to edit.', 'error'); return;
+    }
+    if (!loggedIn.isAdmin && loggedIn.id !== sh.id) {
+      toast('You can only edit your own shed.', 'error'); return;
+    }
+    const days = sh.days || {};
+
+    const daysHTML = DAYS.map(day => {
+      const active = days[day] && days[day].open;
+      const hrs = active ? (days[day].hours || '') : '';
+      return `<div class="day-card${active?' active':''}" id="daycard-${day}">
+        <label>
+          <input type="checkbox" ${active?'checked':''} onchange="toggleDay('${day}',this.checked)" />
+          ${day}
+        </label>
+        ${active ? `<input type="text" id="dayhrs-${day}" value="${esc(hrs)}" placeholder="e.g. 9:00am – 12:00pm" />` : ''}
+      </div>`;
+    }).join('');
+
+    renderModal(`
+      <div class="modal" style="max-width:700px">
+        <div class="modal-header">
+          <h2>Edit Shed Details</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body" id="edit-body">
+          <div class="section-label">Shed Information</div>
+          <div class="form-grid">
+            <div class="field"><label>Name of Shed</label><input type="text" id="e-name" value="${esc(sh.name||'')}" /></div>
+            <div class="field"><label>Address of Shed</label><input type="text" id="e-address" value="${esc(sh.address||'')}" /></div>
+            <div class="form-grid form-row-2">
+              <div class="field"><label>Email Address</label><input type="email" id="e-email" value="${esc(sh.email||'')}" /></div>
+              <div class="field"><label>Contact Details (phone)</label><input type="text" id="e-contact" value="${esc(sh.contact||'')}" /></div>
+            </div>
+            <div class="field"><label>Website URL (for AMSA web page)</label><input type="text" id="e-website" value="${esc(sh.website||'')}" placeholder="https://…" /></div>
+          </div>
+
+          <div class="section-label">Opening Times</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>General Description</label>
+              <input type="text" id="e-opening" value="${esc(sh.opening_times||'')}" placeholder="e.g. Weekday mornings" />
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:600;color:var(--text-mid);display:block;margin-bottom:8px">Days and Hours</label>
+              <div class="days-grid" id="days-grid">${daysHTML}</div>
+            </div>
+          </div>
+
+          <div class="section-label">Executive Team</div>
+          <div class="form-grid">
+            <div class="form-grid form-row-2">
+              <div class="field"><label>President Name</label><input type="text" id="e-president" value="${esc(sh.president||'')}" /></div>
+              <div class="field"><label>President Phone</label><input type="text" id="e-pres-phone" value="${esc(sh.pres_phone||'')}" /></div>
+            </div>
+            <div class="form-grid form-row-2">
+              <div class="field"><label>Secretary Name</label><input type="text" id="e-secretary" value="${esc(sh.secretary||'')}" /></div>
+              <div class="field"><label>Secretary Phone</label><input type="text" id="e-sec-phone" value="${esc(sh.sec_phone||'')}" /></div>
+            </div>
+            <div class="form-grid form-row-2">
+              <div class="field"><label>Treasurer Name</label><input type="text" id="e-treasurer" value="${esc(sh.treasurer||'')}" /></div>
+              <div class="field"><label>Treasurer Phone</label><input type="text" id="e-tre-phone" value="${esc(sh.tre_phone||'')}" /></div>
+            </div>
+          </div>
+
+          <div class="section-label">Compliance Records</div>
+          <div class="form-grid form-row-2">
+            <div class="field"><label>Last A.G.M. Date</label><input type="text" id="e-agm" value="${esc(sh.last_agm||'')}" placeholder="e.g. 15 March 2024" /></div>
+            <div class="field"><label>A.C.N.C. Last Report Date</label><input type="text" id="e-acnc" value="${esc(sh.acnc_date||'')}" placeholder="e.g. 30 June 2024" /></div>
+          </div>
+          <div class="form-grid form-row-2" style="margin-top:12px">
+            <div class="field"><label>AMSA Website Last Updated</label><input type="text" id="e-amsa-updated" value="${esc(sh.amsa_updated||'')}" placeholder="e.g. 20 May 2026" /></div>
+          </div>
+
+          <div class="section-label">Change Password</div>
+          <div class="form-grid form-row-2">
+            <div class="field">
+              <label>New Password</label>
+              <input type="password" id="e-newpass" placeholder="Leave blank to keep current" />
+            </div>
+            <div class="field">
+              <label>Confirm New Password</label>
+              <input type="password" id="e-confpass" placeholder="Repeat new password" />
+            </div>
+          </div>
+          <p class="field-hint" style="margin-top:4px">Only fill in if you want to change your shed's password.</p>
+
+          <div id="save-error" style="margin-top:12px"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEdit('${sh.id}')" id="save-btn">&#10003; Save Changes</button>
+        </div>
+      </div>`);
+  };
+
+  window.toggleDay = function(day, checked) {
+    const card = document.getElementById('daycard-' + day);
+    if (!card) return;
+    card.classList.toggle('active', checked);
+    const existing = card.querySelector('input[type=text]');
+    if (checked && !existing) {
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.id = 'dayhrs-' + day;
+      inp.placeholder = 'e.g. 9:00am – 12:00pm';
+      card.appendChild(inp);
+    } else if (!checked && existing) {
+      existing.remove();
+    }
+  };
+
+  window.saveEdit = async function(id) {
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    const newPass = document.getElementById('e-newpass')?.value;
+    const confPass = document.getElementById('e-confpass')?.value;
+    if (newPass && newPass !== confPass) {
+      document.getElementById('save-error').innerHTML =
+        `<div class="error-box">Passwords do not match.</div>`;
+      btn.disabled = false; btn.textContent = '✓ Save Changes';
+      return;
+    }
+
+    const days = {};
+    DAYS.forEach(day => {
+      const cb = document.querySelector(`#daycard-${day} input[type=checkbox]`);
+      if (cb && cb.checked) {
+        const hrs = document.getElementById('dayhrs-' + day)?.value || '';
+        days[day] = { open: true, hours: hrs };
+      }
+    });
+
+    const updates = {
+      name:          document.getElementById('e-name')?.value || '',
+      address:       document.getElementById('e-address')?.value || '',
+      email:         document.getElementById('e-email')?.value || '',
+      contact:       document.getElementById('e-contact')?.value || '',
+      website:       document.getElementById('e-website')?.value || '',
+      opening_times: document.getElementById('e-opening')?.value || '',
+      days:          days,
+      president:     document.getElementById('e-president')?.value || '',
+      pres_phone:    document.getElementById('e-pres-phone')?.value || '',
+      secretary:     document.getElementById('e-secretary')?.value || '',
+      sec_phone:     document.getElementById('e-sec-phone')?.value || '',
+      treasurer:     document.getElementById('e-treasurer')?.value || '',
+      tre_phone:     document.getElementById('e-tre-phone')?.value || '',
+      last_agm:      document.getElementById('e-agm')?.value || '',
+      acnc_date:     document.getElementById('e-acnc')?.value || '',
+      amsa_updated:  document.getElementById('e-amsa-updated')?.value || '',
+    };
+    if (newPass) updates.password = newPass;
+
+    const { error } = await supabase.from('sheds').update(updates).eq('id', id);
+
+    if (error) {
+      document.getElementById('save-error').innerHTML =
+        `<div class="error-box">Save failed: ${esc(error.message)}</div>`;
+      btn.disabled = false; btn.textContent = '✓ Save Changes';
+      return;
+    }
+
+    if (!loggedIn.isAdmin) {
+      loggedIn.name = updates.name;
+      sessionStorage.setItem('amsa_session', JSON.stringify(loggedIn));
+    }
+    closeModal();
+    await loadSheds();
+    renderHeader();
+    const passMsg = newPass ? ' Your new password is now active.' : '';
+    toast('Shed details saved successfully!' + passMsg);
+  };
+
+  // ── Admin Panel ────────────────────────────────────
+  window.openAdminPanel = function() {
+    const rows = allSheds.map(sh => `
+      <tr>
+        <td style="padding:8px 10px;font-weight:500">${esc(sh.name)}</td>
+        <td style="padding:8px 10px;color:var(--text-muted);font-size:0.85rem">${esc(sh.address||'—')}</td>
+        <td style="padding:8px 10px">
+          <code style="background:var(--tan);padding:2px 7px;border-radius:5px;font-size:0.82rem;border:1px solid var(--border)">${esc(sh.password||'')}</code>
+        </td>
+        <td style="padding:8px 10px;text-align:right">
+          <button class="btn btn-outline btn-sm" onclick="closeModal();openEdit('${sh.id}')">Edit</button>
+          <button class="btn btn-sm" style="color:var(--danger);border-color:var(--danger);background:white;margin-left:4px" onclick="confirmDeleteShed('${sh.id}','${esc(sh.name)}')">Remove</button>
+        </td>
+      </tr>`).join('');
+
+    renderModal(`
+      <div class="modal" style="max-width:800px">
+        <div class="modal-header">
+          <h2>&#9965; Admin Panel</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+
+          <div class="section-label">Add New Shed</div>
+          <div id="add-shed-error"></div>
+          <div class="form-grid" style="margin-bottom:1rem">
+            <div class="form-grid form-row-2">
+              <div class="field">
+                <label>Shed Name <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="new-shed-name" placeholder="e.g. Gosford Mens Shed" />
+              </div>
+              <div class="field">
+                <label>Address</label>
+                <input type="text" id="new-shed-address" placeholder="e.g. 12 Smith St, Gosford NSW 2250" />
+              </div>
+            </div>
+            <div class="form-grid form-row-2">
+              <div class="field">
+                <label>Password for this shed <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="new-shed-password" placeholder="e.g. gosford2024" />
+              </div>
+              <div class="field" style="justify-content:flex-end;padding-top:20px">
+                <button class="btn btn-primary" onclick="addNewShed(this)">&#43; Add Shed to Directory</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-label">All Sheds &amp; Passwords</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:0.9rem">
+              <thead>
+                <tr style="border-bottom:2px solid var(--tan-dark);text-align:left">
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Shed Name</th>
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Address</th>
+                  <th style="padding:6px 10px;color:var(--text-muted);font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.5px">Password</th>
+                  <th style="padding:6px 10px"></th>
+                </tr>
+              </thead>
+              <tbody id="admin-shed-list">
+                ${rows || '<tr><td colspan="4" style="padding:1rem;text-align:center;color:var(--text-muted)">No sheds yet</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Close</button>
+        </div>
+      </div>`);
+  };
+
+  async function geocodeAddress(address) {
+    if (!address) return { lat: null, lon: null };
+    const query = encodeURIComponent(address + ', Australia');
+    const attempts = [
+      async () => {
+        const res = await fetch(`https://photon.komoot.io/api/?q=${query}&limit=1&lang=en`);
+        const d = await res.json();
+        if (d.features && d.features.length > 0) {
+          const [lon, lat] = d.features[0].geometry.coordinates;
+          return { lat, lon };
+        }
+        return null;
+      },
+      async () => {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1&countrycodes=au`);
+        const d = await res.json();
+        if (d && d.length > 0) return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) };
+        return null;
+      }
+    ];
+    for (const attempt of attempts) {
+      try {
+        const result = await attempt();
+        if (result) return result;
+      } catch(e) {}
+    }
+    return { lat: null, lon: null };
+  }
+
+  window.addNewShed = async function(btn) {
+    const name     = document.getElementById('new-shed-name')?.value.trim();
+    const address  = document.getElementById('new-shed-address')?.value.trim();
+    const password = document.getElementById('new-shed-password')?.value.trim();
+    const errEl    = document.getElementById('add-shed-error');
+
+    if (!name || !password) {
+      errEl.innerHTML = '<div class="error-box">Shed name and password are required.</div>';
+      return;
+    }
+
+    // Disable button and show progress
+    if (btn) { btn.disabled = true; btn.textContent = 'Looking up location…'; }
+    errEl.innerHTML = '';
+
+    // Geocode the address
+    const { lat, lon } = await geocodeAddress(address);
+
+    const newShed = {
+      name,
+      address: address || '',
+      password,
+      ...(lat !== null && lon !== null ? { latitude: lat, longitude: lon } : {})
+    };
+
+    const { data, error } = await supabase
+      .from('sheds')
+      .insert([newShed])
+      .select()
+      .single();
+
+    if (btn) { btn.disabled = false; btn.textContent = '+ Add Shed to Directory'; }
+
+    if (error) {
+      errEl.innerHTML = `<div class="error-box">Could not add shed: ${esc(error.message)}</div>`;
+      return;
+    }
+
+    await loadSheds();
+    closeModal();
+
+    const locMsg = lat !== null
+      ? ' Map pin generated automatically. ✓'
+      : ' (No map pin — address not recognised.)';
+    toast(`"${name}" added to the directory!${locMsg}`);
+  };
+
+  window.confirmDeleteShed = function(id, name) {
+    renderModal(`
+      <div class="modal" style="max-width:420px">
+        <div class="modal-header">
+          <h2>Remove Shed</h2>
+          <button class="btn btn-outline btn-sm" onclick="closeModal()">&#x2715;</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.95rem;line-height:1.6">Are you sure you want to remove <strong>${esc(name)}</strong> from the directory? This cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-danger" onclick="deleteShed('${id}')">Yes, Remove Shed</button>
+        </div>
+      </div>`);
+  };
+
+  window.deleteShed = async function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    const { error } = await supabase.from('sheds').delete().eq('id', id);
+    if (error) { toast('Could not remove shed: ' + error.message, 'error'); return; }
+    await loadSheds();
+    closeModal();
+    toast(`"${sh ? sh.name : 'Shed'}" removed from directory.`);
+  };
+
+  // ── Modal helpers ──────────────────────────────────
+  function renderModal(html) {
+    const c = document.getElementById('modal-container');
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    backdrop.id = 'active-modal';
+    backdrop.innerHTML = html;
+    backdrop.addEventListener('click', e => { if (e.target === backdrop) closeModal(); });
+    c.appendChild(backdrop);
+  }
+
+  window.closeModal = function() {
+    document.getElementById('active-modal')?.remove();
+  };
+
+  // ── Toast ──────────────────────────────────────────
+  function toast(msg, type='success') {
+    const area = document.getElementById('toast-area');
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    area.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+  }
+
+  // ── Escape helper ──────────────────────────────────
+  function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Expose globals needed by inline handlers ───────
+  window.openLogin       = openLogin;
+  window.openAdminPanel   = openAdminPanel;
+  window.addNewShed       = addNewShed;
+  window.confirmDeleteShed = confirmDeleteShed;
+  window.deleteShed       = deleteShed;
+  window.openEdit   = openEdit;
+  window.openView   = openView;
+  window.doLogout   = doLogout;
+
+  // ── Map ────────────────────────────────────────────
+  let mapInstance = null;
+  let mapMarker   = null;
+
+  window.showOnMap = function(id) {
+    const sh = allSheds.find(s => s.id === id);
+    if (!sh || !sh.latitude || !sh.longitude) return;
+    const panel = document.getElementById('map-panel');
+    panel.classList.add('open');
+    setTimeout(() => {
+      if (!mapInstance) {
+        mapInstance = L.map('shed-map').setView([sh.latitude, sh.longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mapInstance);
+      } else {
+        mapInstance.setView([sh.latitude, sh.longitude], 15);
+        if (mapMarker) mapInstance.removeLayer(mapMarker);
+      }
+      mapInstance.invalidateSize();
+      mapMarker = L.marker([sh.latitude, sh.longitude])
+        .addTo(mapInstance)
+        .bindPopup('<strong>' + sh.name + '</strong><br>' + (sh.address||''))
+        .openPopup();
+    }, 360);
+  };
+
+  window.closeMap = function() {
+    document.getElementById('map-panel').classList.remove('open');
+    if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 360);
+  };
+
+  boot();
+</script>
+</body>
+</html>
