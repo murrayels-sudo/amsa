@@ -421,11 +421,11 @@
       const pill = loggedIn.isAdmin
         ? '&#9733; Admin — All Sheds'
         : 'Editing: <strong>' + esc(loggedIn.name) + '</strong>';
-      el.innerHTML = `
-        <span class="user-pill">${pill}</span>
-        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>' : ''}
-        ${loggedIn.isAdmin ? '<button class="btn btn-ghost btn-sm" onclick="openCompliance()">&#128203; Compliance Report</button>' : ''}
-        <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>`;
+      let hdr = '<span class="user-pill">' + pill + '</span>';
+      if (loggedIn.isAdmin) hdr += '<button class="btn btn-ghost btn-sm" onclick="openAdminPanel()">&#9965; Admin Panel</button>';
+      if (loggedIn.isAdmin) hdr += '<button class="btn btn-ghost btn-sm" onclick="openCompliance()">&#128203; Compliance Report</button>';
+      hdr += '<button class="btn btn-ghost btn-sm" onclick="doLogout()">Sign out</button>';
+      el.innerHTML = hdr;
     } else {
       el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="openLogin()">Sign in to edit</button>`;
     }
