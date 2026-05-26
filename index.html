@@ -302,15 +302,7 @@
       .site-header h1 { font-size: 1rem; }
     }
 
-    /* ── Map panel ───────────────────────────────────── */
-    .app-body { display:flex; align-items:flex-start; }
-    .app-body .page { flex:1; min-width:0; }
-    .map-panel { width:0; flex-shrink:0; overflow:hidden; transition:width 0.35s ease; background:white; position:sticky; top:64px; height:calc(100vh - 64px); }
-    .map-panel.open { width:420px; border-left:3px solid var(--green-light); }
-    #shed-map { width:100%; height:100%; }
-    .map-close-btn { position:absolute; top:10px; right:10px; z-index:1000; background:var(--green-dark); color:white; border:none; border-radius:6px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Source Sans 3',sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
-    .map-close-btn:hover { background:var(--green-mid); }
-    @media (max-width:700px) { .map-panel.open { position:fixed; inset:0; width:100%!important; height:100%; top:0; z-index:90; } }
+    /* Map panel removed - now opens as separate page */
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -331,8 +323,6 @@
 <!-- Toast area -->
 <div id="toast-area"></div>
 
-<div class="app-body">
-<!-- Main page -->
 <div class="page">
   <div class="toolbar">
     <div class="search-wrap">
@@ -352,11 +342,9 @@
   <div class="footer-note">
     To add your shed to the directory, contact your AMSA state coordinator to receive your shed password.
   </div>
-</div><!-- /page -->
+</div>
 
 <!-- Map panel -->
-<div class="map-panel" id="map-panel" style="position:relative"><div id="shed-map"></div><button class="map-close-btn" onclick="closeMap()">✕ Close map</button></div>
-
 </div><!-- /app-body -->
 
 <!-- Modal container -->
@@ -992,31 +980,15 @@
 
   window.showOnMap = function(id) {
     const sh = allSheds.find(s => s.id === id);
-    if (!sh || !sh.latitude || !sh.longitude) return;
-    const panel = document.getElementById('map-panel');
-    panel.classList.add('open');
-    setTimeout(() => {
-      if (!mapInstance) {
-        mapInstance = L.map('shed-map').setView([sh.latitude, sh.longitude], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(mapInstance);
-      } else {
-        mapInstance.setView([sh.latitude, sh.longitude], 15);
-        if (mapMarker) mapInstance.removeLayer(mapMarker);
-      }
-      mapInstance.invalidateSize();
-      mapMarker = L.marker([sh.latitude, sh.longitude])
-        .addTo(mapInstance)
-        .bindPopup('<strong>' + sh.name + '</strong><br>' + (sh.address||''))
-        .openPopup();
-    }, 360);
+    const lat = parseFloat(sh && sh.latitude);
+    const lon = parseFloat(sh && sh.longitude);
+    if (!sh || isNaN(lat) || isNaN(lon)) return;
+    const url = 'map.html?name=' + encodeURIComponent(sh.name) +
+                '&address=' + encodeURIComponent(sh.address || '') +
+                '&lat=' + lat + '&lon=' + lon;
+    window.open(url, '_blank');
   };
 
-  window.closeMap = function() {
-    document.getElementById('map-panel').classList.remove('open');
-    if (mapInstance) setTimeout(() => mapInstance.invalidateSize(), 360);
-  };
 
   window.openCompliance = function() {
     window.open('compliance.html', '_blank');
