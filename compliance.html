@@ -64,67 +64,6 @@
   }
   .btn-ghost:hover { background: rgba(255,255,255,0.22); }
 
-  /* ── LOGIN SCREEN ───────────────────────────────── */
-  .login-screen {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-  }
-  .login-box {
-    background: white;
-    border-radius: 12px;
-    padding: 36px;
-    max-width: 380px;
-    width: 100%;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    text-align: center;
-  }
-  .login-box h2 {
-    font-size: 20px;
-    color: var(--green-dark);
-    margin-bottom: 6px;
-  }
-  .login-box p {
-    font-size: 13px;
-    color: var(--text-mid);
-    margin-bottom: 20px;
-  }
-  .login-box input {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1.5px solid var(--green-border);
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
-    margin-bottom: 12px;
-    font-family: inherit;
-  }
-  .login-box input:focus { border-color: var(--green-light); }
-  .btn-primary {
-    background: var(--green-dark);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 24px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    font-family: inherit;
-  }
-  .btn-primary:hover { background: var(--green-mid); }
-  .error-msg {
-    background: var(--red-pale);
-    color: var(--red);
-    border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 12px;
-    margin-top: 10px;
-    display: none;
-  }
-
   /* ── REPORT SCREEN ──────────────────────────────── */
   .report-screen { flex: 1; padding: 28px 24px 60px; display: none; }
 
@@ -253,19 +192,8 @@
   </div>
 </header>
 
-<!-- LOGIN SCREEN -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <h2>&#128203; Compliance Report</h2>
-    <p>This report is restricted to administrators.<br>Please enter the Admin password to continue.</p>
-    <input type="password" id="adminPw" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="btn-primary" onclick="doLogin()">View Report</button>
-    <div class="error-msg" id="loginErr">Incorrect password. Please try again.</div>
-  </div>
-</div>
-
 <!-- REPORT SCREEN -->
-<div class="report-screen" id="reportScreen">
+<div class="report-screen" id="reportScreen" style="display:block;">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px;">
     <div>
       <div class="report-title">&#128203; Compliance Report</div>
@@ -308,22 +236,10 @@ let allSheds = [];
 let sortCol = 0;
 let sortDir = 'asc';
 
-// ── LOGIN ─────────────────────────────────────────────
-window.doLogin = function() {
-  const pw = document.getElementById('adminPw').value;
-  const err = document.getElementById('loginErr');
-  if (pw === ADMIN_PW) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('reportScreen').style.display = 'block';
-    document.getElementById('admin-badge').style.display = 'inline';
-    err.style.display = 'none';
-    loadReport();
-  } else {
-    err.style.display = 'block';
-  }
-};
+document.getElementById('admin-badge').style.display = 'inline';
+  loadReport();
 
-// ── LOAD DATA ─────────────────────────────────────────
+  // ── LOAD DATA ─────────────────────────────────────────
 async function loadReport() {
   const { data, error } = await db
     .from('sheds')
