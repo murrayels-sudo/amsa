@@ -18,7 +18,7 @@ const CONFIG = {
 
   // Developer password — grants the same access as Admin, plus future
   // developer-only tools as the app grows. Keep this private; only you should have it.
-  DEVELOPER_PASSWORD: 'devmaster',
+  DEVELOPER_PASSWORD: 'devmaster16289',
 
 };
 
